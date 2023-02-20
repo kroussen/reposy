@@ -7,8 +7,12 @@ from requests.models import Response
 
 # Flask
 from flask import (
-    Flask, 
+    Flask,
     render_template,
+    request,
+    flash,
+    redirect,
+    url_for
 )
 from flask.app import Flask as FlaskApp
 
@@ -20,11 +24,14 @@ from models.pokemon import (
 )
 
 app: FlaskApp = Flask(__name__)
+app.config['SECRET_KEY'] = "fsdfsdfsdfsdfsdfsdfsd"
 pokemons: list[Pokemon] = []
+
 
 @app.route("/home")
 def home_page() -> str:
     return "Welcome to my first page!"
+
 
 @app.route("/")
 def main_page() -> str:
@@ -32,6 +39,20 @@ def main_page() -> str:
         'index.html',
         ctx_lst=pokemons
     )
+
+
+@app.route('/info', methods=['GET', 'POST'])
+def info_pok():
+    if request.method == 'POST':
+        pokemon = None
+        name_pock = request.form['name_pock']
+        for pok in pokemons:
+            if name_pock.lower() == pok.name.english.lower():
+                pokemon = pok
+                return render_template('info_pock.html', pokemon=pokemon)
+        flash('Incorrect name', category='Error')
+    return redirect(url_for('main_page'))
+
 
 @app.route("/num")
 def get_nubmers() -> str:
@@ -41,13 +62,14 @@ def get_nubmers() -> str:
 
     return result
 
+
 if __name__ == '__main__':
     URL: str = (
         'https://raw.githubusercontent.'
         'com/fanzeyi/pokemon.json/'
         'master/pokedex.json'
     )
-    response: Response =\
+    response: Response = \
         requests.get(URL)
     data: list[dict] = response.json()
 
